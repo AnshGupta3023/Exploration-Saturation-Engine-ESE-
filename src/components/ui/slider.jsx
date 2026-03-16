@@ -5,8 +5,6 @@ import as Slider Primitive from "@radix-ui/react-slider"
 
 import { cn } from "@/lib/utils"
 
-Ansh Gupta
-
 +1
 
 const Slider = React.forwardRef (({ className, props }, ref) => (

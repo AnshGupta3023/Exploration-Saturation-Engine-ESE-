@@ -1,1 +1,39 @@
 
+```js
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+export class FrictionSession {
+  constructor({
+    id = null, userId = null, topic = "", category = "",
+    steps = [], theoryPracticeRatio = 60, contextSwitches = 3,
+    feedbackDelay = 24, additionalNotes = "", frictionScore = 0,
+    frictionDrivers = [], recommendation = "", detailedAnalysis = "",
+    optimizationTips = [], estimatedImprovementPotential = "",
+    createdAt = null, type = "friction",
+  } = {}) {
+    this.id = id || genId();
+    this.userId = userId;
+    this.topic = topic;
+    this.category = category;
+    this.steps = steps;
+    this.theoryPracticeRatio = theoryPracticeRatio;
+    this.contextSwitches = contextSwitches;
+    this.feedbackDelay = feedbackDelay;
+    this.additionalNotes = additionalNotes;
+    this.frictionScore = frictionScore;
+    this.frictionDrivers = frictionDrivers;
+    this.recommendation = recommendation;
+    this.detailedAnalysis = detailedAnalysis;
+    this.optimizationTips = optimizationTips;
+    this.estimatedImprovementPotential = estimatedImprovementPotential;
+    this.createdAt = createdAt || new Date().toISOString();
+    this.type = type;
+  }
+}
+
+export function createStep(name = "", type = "Theory / Reading") {
+  return { id: genId(), name, type, difficulty: 50, hasFeedback: false };
+}
+```

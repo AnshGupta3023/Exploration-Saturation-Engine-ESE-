@@ -1,1 +1,40 @@
 
+```js
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+export class ExplorationSession {
+  constructor({
+    id = null, userId = null, topic = "", category = "",
+    optionsExplored = 5, hoursSpent = 2, sourcesConsulted = 10,
+    comparisonsMade = 3, topOptions = [], additionalNotes = "",
+    saturationScore = 0, status = "", recommendation = "",
+    detailedAnalysis = "", keyInsights = [], nextSteps = [],
+    createdAt = null, type = "exploration",
+  } = {}) {
+    this.id = id || genId();
+    this.userId = userId;
+    this.topic = topic;
+    this.category = category;
+    this.optionsExplored = optionsExplored;
+    this.hoursSpent = hoursSpent;
+    this.sourcesConsulted = sourcesConsulted;
+    this.comparisonsMade = comparisonsMade;
+    this.topOptions = topOptions;
+    this.additionalNotes = additionalNotes;
+    this.saturationScore = saturationScore;
+    this.status = status;
+    this.recommendation = recommendation;
+    this.detailedAnalysis = detailedAnalysis;
+    this.keyInsights = keyInsights;
+    this.nextSteps = nextSteps;
+    this.createdAt = createdAt || new Date().toISOString();
+    this.type = type;
+  }
+}
+
+export function createTopOption(name = "", confidence = 70) {
+  return { id: genId(), name, confidence };
+}
+```

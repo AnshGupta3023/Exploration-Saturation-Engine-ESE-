@@ -1,1 +1,231 @@
 
+```jsx
+// ─── Central Hooks Export File ─────────────────────────────────────
+// This file exports all custom hooks used across the ESE application
+
+export { useIsMobile } from "@/hook/use-mobile"
+export { useToast, toast } from "@/components/ui/use-toast"
+export { useAuth } from "@/lib/authquantext"
+
+// ─── useLocalStorage Hook ──────────────────────────────────────────
+import { useState, useEffect, useCallback } from "react"
+
+export function useLocalStorage(key, initialValue) {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = localStorage.getItem(key)
+      return item ? JSON.parse(item) : initialValue
+    } catch {
+      return initialValue
+    }
+  })
+
+  const setValue = useCallback(
+    (value) => {
+      try {
+        const valueToStore =
+          value instanceof Function ? value(storedValue) : value
+        setStoredValue(valueToStore)
+        localStorage.setItem(key, JSON.stringify(valueToStore))
+      } catch (e) {
+        console.error("useLocalStorage error:", e)
+      }
+    },
+    [key, storedValue]
+  )
+
+  const removeValue = useCallback(() => {
+    try {
+      localStorage.removeItem(key)
+      setStoredValue(initialValue)
+    } catch (e) {
+      console.error("useLocalStorage removeValue error:", e)
+    }
+  }, [key, initialValue])
+
+  return [storedValue, setValue, removeValue]
+}
+
+// ─── useDebounce Hook ──────────────────────────────────────────────
+export function useDebounce(value, delay = 300) {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+    return () => clearTimeout(timer)
+  }, [value, delay])
+
+  return debouncedValue
+}
+
+// ─── useSessions Hook ─────────────────────────────────────────────
+export function useSessions() {
+  const { getUserSessions, deleteSession, getUserStats } = useAuth()
+
+  const sessions = getUserSessions()
+  const stats = getUserStats()
+
+  const explorations = sessions.filter((s) => s.type === "exploration")
+  const frictions = sessions.filter((s) => s.type === "friction")
+
+  const recentSessions = sessions.slice(0, 5)
+
+  return {
+    sessions,
+    explorations,
+    frictions,
+    recentSessions,
+    stats,
+    deleteSession,
+  }
+}
+
+// ─── useAnalysis Hook ─────────────────────────────────────────────
+import { useState } from "react"
+import { useAuth } from "@/lib/authquantext"
+import {
+  analyzeExplorationSaturation,
+  analyzeCognitiveFriction,
+} from "@/API/googlegemini"
+import { toast as sonnerToast } from "sonner"
+
+export function useExplorationAnalysis() {
+  const { saveSession } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [formData, setFormData] = useState(null)
+  const [error, setError] = useState(null)
+
+  const analyze = async (data) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const analysis = await analyzeExplorationSaturation(data)
+      saveSession({ ...data, ...analysis, type: "exploration" })
+      setFormData(data)
+      setResult(analysis)
+      sonnerToast.success("Exploration analysis complete!")
+      return analysis
+    } catch (err) {
+      setError(err.message)
+      sonnerToast.error(err.message || "Analysis failed")
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const reset = () => {
+    setResult(null)
+    setFormData(null)
+    setError(null)
+  }
+
+  return { loading, result, formData, error, analyze, reset }
+}
+
+export function useFrictionAnalysis() {
+  const { saveSession } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [formData, setFormData] = useState(null)
+  const [error, setError] = useState(null)
+
+  const analyze = async (data) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const analysis = await analyzeCognitiveFriction(data)
+      saveSession({ ...data, ...analysis, type: "friction" })
+      setFormData(data)
+      setResult(analysis)
+      sonnerToast.success("Friction analysis complete!")
+      return analysis
+    } catch (err) {
+      setError(err.message)
+      sonnerToast.error(err.message || "Analysis failed")
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const reset = () => {
+    setResult(null)
+    setFormData(null)
+    setError(null)
+  }
+
+  return { loading, result, formData, error, analyze, reset }
+}
+
+// ─── useScoreColor Hook ────────────────────────────────────────────
+import {
+  getSaturationColor,
+  getFrictionColor,
+  getSaturationStatus,
+  getFrictionStatus,
+} from "@/lib/utils"
+
+export function useScoreColor(score, type = "exploration") {
+  const color =
+    type === "exploration"
+      ? getSaturationColor(score)
+      : getFrictionColor(score)
+
+  const status =
+    type === "exploration"
+      ? getSaturationStatus(score)
+      : getFrictionStatus(score)
+
+  return { color, status }
+}
+
+// ─── useFormValidation Hook ────────────────────────────────────────
+export function useFormValidation() {
+  const [errors, setErrors] = useState({})
+
+  const validate = useCallback((fields) => {
+    const newErrors = {}
+
+    if (fields.topic !== undefined && !fields.topic.trim()) {
+      newErrors.topic = "Topic is required"
+    }
+
+    if (fields.category !== undefined && !fields.category) {
+      newErrors.category = "Category is required"
+    }
+
+    if (
+      fields.password !== undefined &&
+      fields.password.length < 8
+    ) {
+      newErrors.password = "Password must be at least 8 characters"
+    }
+
+    if (
+      fields.confirmPassword !== undefined &&
+      fields.password !== fields.confirmPassword
+    ) {
+      newErrors.confirmPassword = "Passwords do not match"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }, [])
+
+  const clearError = useCallback((field) => {
+    setErrors((prev) => {
+      const updated = { ...prev }
+      delete updated[field]
+      return updated
+    })
+  }, [])
+
+  const clearAll = useCallback(() => setErrors({}), [])
+
+  return { errors, validate, clearError, clearAll }
+}
+```

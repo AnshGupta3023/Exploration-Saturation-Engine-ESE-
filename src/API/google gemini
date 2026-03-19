@@ -1,7 +1,7 @@
 ```js
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI("AIzaSyB4qZ9V_EgtOAXVM8Nywm3aBPtYYZsJGwc");
+const genAI = new GoogleGenerativeAI("AIzaSyBiUOcQC3TYABhO154pB6CojDhj3lMIdmc");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 function parseJSON(text) {
